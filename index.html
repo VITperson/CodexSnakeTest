@@ -265,17 +265,21 @@
         }
         ctx.stroke();
 
-        // food
-        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--food');
-        roundRect(food.x * CELL + 2, food.y * CELL + 2, CELL - 4, CELL - 4, 4, true);
+        // food (guard if not yet spawned)
+        if (food) {
+          ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--food');
+          roundRect(food.x * CELL + 2, food.y * CELL + 2, CELL - 4, CELL - 4, 4, true);
+        }
 
-        // snake
-        const snakeColor = getComputedStyle(document.documentElement).getPropertyValue('--snake');
-        const headColor = getComputedStyle(document.documentElement).getPropertyValue('--snake-head');
-        snake.forEach((seg, i) => {
-          ctx.fillStyle = i === 0 ? headColor : snakeColor;
-          roundRect(seg.x * CELL + 2, seg.y * CELL + 2, CELL - 4, CELL - 4, 6, true);
-        });
+        // snake (guard if not yet initialized)
+        if (Array.isArray(snake) && snake.length) {
+          const snakeColor = getComputedStyle(document.documentElement).getPropertyValue('--snake');
+          const headColor = getComputedStyle(document.documentElement).getPropertyValue('--snake-head');
+          snake.forEach((seg, i) => {
+            ctx.fillStyle = i === 0 ? headColor : snakeColor;
+            roundRect(seg.x * CELL + 2, seg.y * CELL + 2, CELL - 4, CELL - 4, 6, true);
+          });
+        }
       }
 
       function roundRect(x, y, w, h, r, fill) {
@@ -351,7 +355,7 @@
       // Input
       window.addEventListener('keydown', (e) => {
         const k = e.key.toLowerCase();
-        if (k === ' ' || k === 'spacebar') {
+        if (e.code === 'Space') {
           e.preventDefault();
           togglePause();
           return;
@@ -363,8 +367,8 @@
           k === 'arrowleft' || k === 'a' ? { x: -1, y: 0 } :
           k === 'arrowright' || k === 'd' ? { x: 1, y: 0 } : null;
         if (d) {
-          // prevent immediate reverse
-          if (snake.length > 1 && (d.x === -dir.x && d.y === -dir.y)) return;
+          // prevent immediate reverse (guard for pre-start state)
+          if (snake && dir && snake.length > 1 && (d.x === -dir.x && d.y === -dir.y)) return;
           nextDir = d;
         }
       });
@@ -379,10 +383,10 @@
 
       // Boot
       loadHiScore();
+      // Draw initial board (no snake/food yet) and start loop
       draw();
       overlay.classList.add('show');
       requestAnimationFrame(loop);
     </script>
   </body>
   </html>
-
